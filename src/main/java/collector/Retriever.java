@@ -48,13 +48,13 @@ public class Retriever {
 
            if ((start <= count) & (count <= end)) {
                 System.out.print("" + count + " - " + line);
-                Response response = Request.Get(line).execute();
+                Response response = Request.Get(line).connectTimeout(1000).socketTimeout(1000).execute();
                 int status = response.returnResponse().getStatusLine().getStatusCode();
                 System.out.println(" (" + status + ")");
                 repo.setOriginalStatus(new URL(line), new Integer(status).toString());
                 if (status == HttpStatus.SC_OK) {
                     //TODO What if status is no longer OK?
-                    response = Request.Get(line).execute();
+                    response = Request.Get(line).connectTimeout(1000).socketTimeout(1000).execute();
                     repo.setOriginalContent(new URL(line), response.returnContent().asString());
                     ok++;
                 } else {
@@ -65,7 +65,7 @@ public class Retriever {
         }
         repo.shutdown();
         br.close();
-        System.out.println("Processed: " + ok + notOk + " (" + ok + " ok - " + notOk + " not ok)");
+        System.out.println("Processed: " + (ok + notOk) + " (" + ok + " ok - " + notOk + " not ok)");
     }
 
     /**
