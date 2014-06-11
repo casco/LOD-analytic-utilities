@@ -1,4 +1,4 @@
-package collector;
+package repository;
 
 import org.apache.jackrabbit.core.TransientRepository;
 
@@ -175,7 +175,9 @@ public  class DocumentRepository {
      * @throws RepositoryException
      */
     public String getOriginalStatus(URL url) throws RepositoryException {
-        return getStringProperty(url, ORIGINAL_STATUS);
+
+        String stringProperty = getStringProperty(url, ORIGINAL_STATUS);
+        return stringProperty != null ? stringProperty : STATUS_MISSING;
     }
 
     /**
@@ -230,8 +232,13 @@ public  class DocumentRepository {
         }
 
         javax.jcr.query.QueryManager queryManager = session.getWorkspace().getQueryManager();
-        String expression = "SELECT * from nt:unstructured\n" +
-                "where ORIGINAL_STATUS ='" + status + "'";
+        String selector = "(ORIGINAL_STATUS  ='" + status + "')";
+        if (status.equals(STATUS_MISSING)) {
+            selector = "((ORIGINAL_STATUS IS NULL) OR (ORIGINAL_STATUS = '" + STATUS_MISSING + "'))";
+        }
+
+       String expression = "SELECT * from nt:unstructured\n" +
+                "where (jcr:path LIKE '/documents_home/%') AND " + selector ;
 
         javax.jcr.query.Query query = queryManager.createQuery(expression, Query.SQL);
         QueryResult result = query.execute();
@@ -288,7 +295,12 @@ public  class DocumentRepository {
             throw new RepositoryException("No session available");
         }
         Node node = getDocumentNode(url);
-        return node.getProperty(property).getString();
+        if (node.hasProperty(property)) {
+            return node.getProperty(property).getString();
+        } else {
+            return null;
+        }
+
     }
 
     private Node getDocumentNode(URL url) throws RepositoryException {

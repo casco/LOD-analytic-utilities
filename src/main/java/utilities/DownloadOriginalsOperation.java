@@ -1,4 +1,6 @@
-package collector;
+package utilities;
+
+import repository.DocumentRepository;
 
 import javax.jcr.RepositoryException;
 import java.io.File;
@@ -10,7 +12,7 @@ import java.util.Iterator;
  * I look for those documents in the repo that have the indicated original status
  * and try to retrieve them
  */
-public class DownloadByStatusOperation extends AbstractRepositoryOperation {
+public class DownloadOriginalsOperation extends AbstractRepositoryOperation {
 
 
     String status = DocumentRepository.STATUS_MISSING;
@@ -25,7 +27,7 @@ public class DownloadByStatusOperation extends AbstractRepositoryOperation {
      * @param countLimit maximum number of URLs to process - 0 means all possible
      * @param timeLimit maximum time (in minutes) to work - 0 means all possible
      */
-    public DownloadByStatusOperation(File repoFolder, String status, int countLimit, long timeLimit) {
+    public DownloadOriginalsOperation(File repoFolder, String status, int countLimit, long timeLimit) {
         super(repoFolder);
         this.status = status;
         this.countLimit = countLimit;
@@ -60,6 +62,6 @@ public class DownloadByStatusOperation extends AbstractRepositoryOperation {
     }
 
     public static void main(String[] args) {
-        new DownloadByStatusOperation(new File("data/repo"), DocumentRepository.STATUS_MISSING,0,1).run();
+        new DownloadOriginalsOperation(new File("data/repo"), DocumentRepository.STATUS_MISSING,0,1).run();
     }
 }

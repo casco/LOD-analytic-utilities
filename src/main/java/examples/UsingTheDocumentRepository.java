@@ -1,13 +1,7 @@
 package examples;
 
 
-import javax.jcr.Repository;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
-import javax.jcr.Node;
-
-import collector.DocumentRepository;
-import org.apache.jackrabbit.core.TransientRepository;
+import repository.DocumentRepository;
 
 import java.io.File;
 import java.net.URL;

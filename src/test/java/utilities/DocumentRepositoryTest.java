@@ -1,10 +1,11 @@
-package collector;
+package utilities;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.http.client.fluent.Request;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import repository.DocumentRepository;
 
 import javax.jcr.RepositoryException;
 import java.io.File;
@@ -141,6 +142,7 @@ public class DocumentRepositoryTest {
         repository.setOriginalStatus(new URL("http://mentira.org/2"), DocumentRepository.STATUS_404);
         repository.setOriginalStatus(new URL("http://mentira.org/3"), DocumentRepository.STATUS_404);
         repository.setOriginalStatus(new URL("http://mentira.org/4"), DocumentRepository.STATUS_TIMED_OUT);
+        repository.setOriginalContent(new URL("http://mentira.org/5"),"without status - should be missing");
         int count = 0;
         Iterator<URL> iterator = repository.documentsByStatusIterator(DocumentRepository.STATUS_404);
         while (iterator.hasNext()) {
@@ -148,6 +150,14 @@ public class DocumentRepositoryTest {
             assertEquals(DocumentRepository.STATUS_404,repository.getOriginalStatus(iterator.next()));
         }
         assertEquals(2,count);
+        count = 0;
+        iterator = repository.documentsByStatusIterator(DocumentRepository.STATUS_MISSING);
+        while (iterator.hasNext()) {
+            count++;
+            assertEquals(DocumentRepository.STATUS_MISSING,repository.getOriginalStatus(iterator.next()));
+        }
+        assertEquals(2,count);
+
         repository.endSession();
     }
 

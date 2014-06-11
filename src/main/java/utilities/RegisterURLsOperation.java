@@ -1,4 +1,6 @@
-package collector;
+package utilities;
+
+import repository.DocumentRepository;
 
 import javax.jcr.RepositoryException;
 import java.io.*;
@@ -11,11 +13,11 @@ import java.util.logging.Logger;
 /**
  * Created by alejandrofernandez on 6/10/14.
  */
-public class RegisterURLOperation extends AbstractRepositoryOperation {
+public class RegisterURLsOperation extends AbstractRepositoryOperation {
 
     File urlList;
 
-    public RegisterURLOperation(File repoFolder, File urlList) {
+    public RegisterURLsOperation(File repoFolder, File urlList) {
         super(repoFolder);
         this.urlList = urlList;
     }
@@ -59,6 +61,6 @@ public class RegisterURLOperation extends AbstractRepositoryOperation {
 
 
     public static void main(String[] args) {
-        new RegisterURLOperation(new File("data/repo"), new File("data/all_urls.txt")).run();
+        new RegisterURLsOperation(new File("data/repo"), new File("data/all_urls.txt")).run();
     }
 }

@@ -1,8 +1,10 @@
-package collector;
+package utilities;
 
+import utilities.helpers.HttpClientResponseHandler;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.conn.ConnectTimeoutException;
+import repository.DocumentRepository;
 
 import javax.jcr.RepositoryException;
 import java.io.File;
