@@ -7,7 +7,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.jcr.RepositoryException;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -16,7 +15,8 @@ import java.net.URLEncoder;
 import java.util.Calendar;
 import java.util.Iterator;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class DocumentRepositoryTest {
 
@@ -130,6 +130,24 @@ public class DocumentRepositoryTest {
         URL url = new URL("http://mentira.org/");
         repository.setOriginalStatus(url, DocumentRepository.STATUS_404);
         assertEquals(DocumentRepository.STATUS_404, repository.getOriginalStatus(url));
+        repository.endSession();
+    }
+
+    @Test
+    public void testDocumentsByStatusIterator() throws RepositoryException, MalformedURLException {
+        repository.startSession();
+        URL url = new URL("http://mentira.org/");
+        repository.setOriginalStatus(new URL("http://mentira.org/1"), DocumentRepository.STATUS_MISSING);
+        repository.setOriginalStatus(new URL("http://mentira.org/2"), DocumentRepository.STATUS_404);
+        repository.setOriginalStatus(new URL("http://mentira.org/3"), DocumentRepository.STATUS_404);
+        repository.setOriginalStatus(new URL("http://mentira.org/4"), DocumentRepository.STATUS_TIMED_OUT);
+        int count = 0;
+        Iterator<URL> iterator = repository.documentsByStatusIterator(DocumentRepository.STATUS_404);
+        while (iterator.hasNext()) {
+            count++;
+            assertEquals(DocumentRepository.STATUS_404,repository.getOriginalStatus(iterator.next()));
+        }
+        assertEquals(2,count);
         repository.endSession();
     }
 

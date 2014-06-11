@@ -3,6 +3,8 @@ package collector;
 import org.apache.jackrabbit.core.TransientRepository;
 
 import javax.jcr.*;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryResult;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -25,9 +27,10 @@ public  class DocumentRepository {
     private static final String ORIGINAL_STATUS = "ORIGINAL_STATUS";
     private static final String EXTRACTED_STATUS = "EXTRACTED_STATUS";
 
-    public static final String STATUS_404 = "STATUS_404";
-    public static final String STATUS_OK = "STATUS_OK";
-
+    public static final String STATUS_404 = "404";
+    public static final String STATUS_OK = "200";
+    public static final String STATUS_TIMED_OUT = "408";
+    public static final String STATUS_MISSING = "MISSING";
 
     TransientRepository repository;
     Session session;
@@ -103,6 +106,19 @@ public  class DocumentRepository {
     public void setExtractedContent(URL url, String extractedContent, String extractor) throws RepositoryException {
         setStringProperty(url, EXTRACTED_CONTENT, extractedContent);
         setStringProperty(url, EXTRACTOR, extractedContent);
+    }
+
+    /**
+     * Returns true if there is original content for the url
+     * @param url
+     * @return
+     * @throws RepositoryException
+     */
+    public boolean hasOriginalContent(URL url) throws RepositoryException {
+        String encodedUrl = encode(url);
+
+        Node root = getDocumentsHomeNode();
+        return root.hasNode(encodedUrl);
     }
 
     /**
@@ -197,7 +213,37 @@ public  class DocumentRepository {
         Node documentsHomeNode = getDocumentsHomeNode();
         final NodeIterator nodeIterator = documentsHomeNode.getNodes();
 
-        Iterator<URL> urlIterator = new Iterator<URL>() {
+        Iterator<URL> urlIterator = getIteratorWrapper(nodeIterator);
+        return urlIterator;
+    }
+
+
+    /**
+     * An iterator only for documents with a given status
+     * @param status (original document)
+     * @return
+     * @throws RepositoryException
+     */
+    public Iterator<URL> documentsByStatusIterator(String status) throws RepositoryException {
+        if (! sessionAvailable) {
+            throw new RepositoryException("No session available");
+        }
+
+        javax.jcr.query.QueryManager queryManager = session.getWorkspace().getQueryManager();
+        String expression = "SELECT * from nt:unstructured\n" +
+                "where ORIGINAL_STATUS ='" + status + "'";
+
+        javax.jcr.query.Query query = queryManager.createQuery(expression, Query.SQL);
+        QueryResult result = query.execute();
+
+        final NodeIterator nodeIterator = result.getNodes();
+
+        Iterator<URL> urlIterator = getIteratorWrapper(nodeIterator);
+        return urlIterator;
+    }
+
+    private Iterator<URL> getIteratorWrapper(final NodeIterator nodeIterator) {
+        return new Iterator<URL>() {
             @Override
             public boolean hasNext() {
                 return nodeIterator.hasNext();
@@ -205,7 +251,7 @@ public  class DocumentRepository {
 
             @Override
             public URL next() {
-                javax.jcr.Node node = nodeIterator.nextNode();
+                Node node = nodeIterator.nextNode();
                 try {
                     return new URL(URLDecoder.decode(node.getName(), UTF_8));
                 } catch (MalformedURLException e) {
@@ -223,8 +269,8 @@ public  class DocumentRepository {
                 nodeIterator.remove();
             }
         };
-        return urlIterator;
     }
+
 
     private void setStringProperty(URL url, String property, String content) throws RepositoryException {
         if (! sessionAvailable) {
@@ -246,24 +292,13 @@ public  class DocumentRepository {
     }
 
     private Node getDocumentNode(URL url) throws RepositoryException {
-        String encodedUrl = null;
-        try {
-            encodedUrl = URLEncoder.encode(url.toString(), UTF_8);
-        } catch (UnsupportedEncodingException e) {
-            throw new RepositoryException("Problems encoding...");
-        }
-
+        String encodedUrl = encode(url);
         Node documentsHomeNode = getDocumentsHomeNode();
         return documentsHomeNode.getNode(encodedUrl);
     }
 
     private Node getOrCreateDocumentNode(URL url) throws RepositoryException {
-        String encodedUrl = null;
-        try {
-            encodedUrl = URLEncoder.encode(url.toString(), UTF_8);
-        } catch (UnsupportedEncodingException e) {
-            throw new RepositoryException("Problems encoding...");
-        }
+        String encodedUrl = encode(url);
         Node documentsHomeNode = getDocumentsHomeNode();
         Node docNode = null;
         if (documentsHomeNode.hasNode(encodedUrl)) {
@@ -284,4 +319,14 @@ public  class DocumentRepository {
 
 
 
+
+    private String encode(URL url) throws RepositoryException {
+        String encodedUrl = null;
+        try {
+            encodedUrl = URLEncoder.encode(url.toString(), UTF_8);
+        } catch (UnsupportedEncodingException e) {
+            throw new RepositoryException("Problems encoding...");
+        }
+        return encodedUrl;
+    }
 }
